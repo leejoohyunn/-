@@ -427,4 +427,112 @@ ax[1].set_title('LDA of IRIS dataset')
 
 plt.show()
 ```
-![subplot 시각화 이미지](./images/데전이미지.png)
+![subplot 시각화 이미지](https://github.com/leejoohyunn/images/blob/main/%EB%8D%B0%EC%A0%84%EC%9D%B4%EB%AF%B8%EC%A7%80.png)
+## 3.피쳐 선택 기법
+  - 종속변수 활용여부에 따라
+      - supervised: 종속변수를 활용해 선택
+      - unsupervised: 독립변수들 만으로 선택
+  - 선택 메커니즘에 따라
+      - Filter: 통계적인 방법으로 선택
+      - Wrapper: 모델을 활용해 선택
+      - Embedded: 모델 훈련 과정에서 자동으로 선택
+      - Hybrid: Filter + Wrapper
+   
+### 3.1 필터 기법(Filter Method)
+  - 분산 기반 선택(Variance-based Selection)
+```python
+from sklearn import datasets
+from sklearn.feature_selection import VarianceThreshold
+
+# iris 데이터셋을 로드
+iris = datasets.load_iris()
+
+X = iris.data # iris 데이터셋의 피쳐들
+y = iris.target # iris 데이터셋의 타겟
+X_names = iris.feature_names # iris 데이터셋의 피쳐 이름
+y_names = iris.target_names # iris 데이터셋의 타겟 이름
+
+# 분산이 0.2 이상인 피쳐들만 선택하도록 학습
+sel = VarianceThreshold(threshold=0.2).fit(X)
+print(f'{sel.variances_ = }') # 각 피쳐의 분산 확인
+
+# 분산이 0.2 이상인 피쳐들만 선택 적용
+X_selected = sel.transform(X) # 분산이 0.2 이상인 피쳐들만 선택
+X_selected_names = [X_names[i] for i in sel.get_support(indices=True)] # 선택된 피쳐들의 이름
+
+print(f'{X_selected_names = }')
+print(f'{X_selected[:5] = }')
+```
+```python
+
+sel.variances_ = array([0.68112222, 0.18871289, 3.09550267, 0.57713289])
+X_selected_names = ['sepal length (cm)', 'petal length (cm)', 'petal width (cm)']
+X_selected[:5] = array([[5.1, 1.4, 0.2],
+       [4.9, 1.4, 0.2],
+       [4.7, 1.3, 0.2],
+       [4.6, 1.5, 0.2],
+       [5. , 1.4, 0.2]])
+```
+> F-value
+>   - 두 모집단(확률변수)의 분산의 비율을 나타내는 값
+>   - ANOVA, Regression에서는 모형이 설명하는 분산/잔자의 분산
+>       - F-value가 크면 모형이 잘 설명하고 있다는 의미
+
+> 상호정보량(mutual information)
+>   - 하나의 확률변수가 다른 하나의 확률변수에 대해 제공하는 정보의 양
+>   - 두 확률변수가 공유하는 엔트로피
+>       - 두 확률변수가 독립이라면, 상호정보량은 0
+>       - 두 확률변수의 상관관계가 강할수록 상호정보량이 커짐
+
+> 카이제곱 테스트
+>   - 범주형 데이터에서 두 요인간 독립성 검정에서 사용
+>     - 카이제곱 value가 크면 두 요인간 독립이 아니라는 의미(즉, 상관관계가 있음)
+
+```python
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_classif, f_regression, chi2
+
+# k개의 베스트 피쳐를 선택
+sel_fc = SelectKBest(f_classif, k=2).fit(X, y)
+print('f_classif: ')
+print(f'{sel_fc.scores_ = }')
+print(f'{sel_fc.pvalues_ = }')
+print(f'{sel_fc.get_support() = }')
+print('Selected features: ', [X_names[i] for i in sel_fc.get_support(indices=True)]) # 선택된 피쳐들의 이름
+
+sel_fr = SelectKBest(f_regression, k=2).fit(X, y)
+print('\nf_regression: ')
+print(f'{sel_fr.scores_ = }')
+print(f'{sel_fr.pvalues_ = }')
+print(f'{sel_fr.get_support() = }')
+print('Selected features: ', [X_names[i] for i in sel_fr.get_support(indices=True)]) # 선택된 피쳐들의 이름
+
+sel_chi2 = SelectKBest(chi2, k=2).fit(X, y)
+print('\nchi2: ')
+print(f'{sel_chi2.scores_ = }')
+print(f'{sel_chi2.pvalues_ = }')
+print(f'{sel_chi2.get_support() = }')
+print('Selected features: ', [X_names[i] for i in sel_chi2.get_support(indices=True)]) # 선택된 피쳐들의 이름
+```
+```python
+f_classif: 
+sel_fc.scores_ = array([ 119.26450218,   49.16004009, 1180.16118225,  960.0071468 ])
+sel_fc.pvalues_ = array([1.66966919e-31, 4.49201713e-17, 2.85677661e-91, 4.16944584e-85])
+sel_fc.get_support() = array([False, False,  True,  True])
+Selected features:  ['petal length (cm)', 'petal width (cm)']
+
+f_regression: 
+sel_fr.scores_ = array([ 233.8389959 ,   32.93720748, 1341.93578461, 1592.82421036])
+sel_fr.pvalues_ = array([2.89047835e-32, 5.20156326e-08, 4.20187315e-76, 4.15531102e-81])
+sel_fr.get_support() = array([False, False,  True,  True])
+Selected features:  ['petal length (cm)', 'petal width (cm)']
+
+chi2: 
+sel_chi2.scores_ = array([ 10.81782088,   3.7107283 , 116.31261309,  67.0483602 ])
+sel_chi2.pvalues_ = array([4.47651499e-03, 1.56395980e-01, 5.53397228e-26, 2.75824965e-15])
+sel_chi2.get_support() = array([False, False,  True,  True])
+Selected features:  ['petal length (cm)', 'petal width (cm)']
+```
+### 3.2 래퍼 기법(wrapper method)
+>svc(Support Vector Classification)와 SVM(Support Vector Machine)
+> 
