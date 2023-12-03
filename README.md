@@ -28,7 +28,7 @@ df
 ```python
 import pandas as pd
 
-df_example = pd.DataFrame({
+df = pd.DataFrame({
     'age': [25, 30, 22, 35, 28],                   # feature: age,
 continuous
     'income': [50000, 75000, 60000, 90000, 80000], # feature: income, continuous
@@ -336,10 +336,10 @@ df_te = df.copy()
 te = TargetEncoder(smooth=0, target_type='continuous')
 
 # 데이터로 te 학습
-# 타겟을 weight라고 가정하고 marital_status을 인코딩
-# marital_status_target은 weight와 비례하여 인코딩된 값
+# 타겟을 age라고 가정하고 marital_status을 인코딩
+# marital_status_target은 age와 비례하여 인코딩된 값
 # 인코딩이 되는 값은 2차원으로 변환해야 함
-te.fit(df['marital_status'].values.reshape(-1, 1), df.weight)
+te.fit(df['marital_status'].values.reshape(-1, 1), df.age)
 
 # 학습된 결과 
 print(f'{te.categories_=}')
@@ -349,13 +349,13 @@ df_te['marital_status_target'] = te.transform(df['marital_status'].values.reshap
 df_te
 ```
 te.categories_=[array(['Divorced', 'Married', 'Single'], dtype=object)]
-|    |   weight |   height | sex   | blood_type   | health    | marital_status   |   marital_status_target |
-|---:|---------:|---------:|:------|:-------------|:----------|:-----------------|------------------------:|
-|  0 |       40 |      162 | f     | O            | good      | Single           |                      50 |
-|  1 |       80 |      155 | m     | A            | excellent | Married          |                      65 |
-|  2 |       60 |      182 | m     | B            | bad       | Single           |                      50 |
-|  3 |       50 |      173 | f     | O            | bad       | Married          |                      65 |
-|  4 |       90 |      177 | m     | A            | good      | Divorced         |                      90 |
+|  | age|  income|  education|  marital_status|  purchase|  marital_status_target|
+|-:|---:|-------:|----------:|---------------:|---------:|----------------------:|
+| 0|  25|   50000|   Bachelor|          Single|       Yes|                   23.5|
+| 1|  30|   75000|     Master|         Married|        No|                   32.5|
+| 2|  22|   60000|        PhD|          Single|       Yes|                   23.5|
+| 3|  35|   90000|   Bachelor|         Married|        No|                   32.5|
+| 4|  28|   80000|     Master|        Divorced|        No|                     28|
 ---
 
 ### 2.2 범주형 데이터 -> 이진 데이터
@@ -409,13 +409,13 @@ df_ohe[ohe.categories_[0]] = ohe.transform(df_ohe[['marital_status']]).toarray()
 df_ohe
 ```
 ohe.categories_=[array(['Divorced', 'Married', 'Single'], dtype=object)]
-|    |   weight |   height | sex   | blood_type   | health    | marital_status   |   Divorced |   Married |   Single |
-|---:|---------:|---------:|:------|:-------------|:----------|:-----------------|-----------:|----------:|---------:|
-|  0 |       40 |      162 | f     | O            | good      | Single           |          0 |         0 |        1 |
-|  1 |       80 |      155 | m     | A            | excellent | Married          |          0 |         1 |        0 |
-|  2 |       60 |      182 | m     | B            | bad       | Single           |          0 |         0 |        1 |
-|  3 |       50 |      173 | f     | O            | bad       | Married          |          0 |         1 |        0 |
-|  4 |       90 |      177 | m     | A            | good      | Divorced         |          1 |         0 |        0 |
+|  | age|  income|  education|  marital_status|  purchase|  Single|  Married|  Divorced|
+|-:|---:|-------:|----------:|---------------:|---------:|-------:|--------:|---------:|
+| 0|  25|   50000|   Bachelor|          Single|       Yes|       1|        0|         0|
+| 1|  30|   75000|     Master|         Married|        No|       0|        1|         0|  
+| 2|  22|   60000|        PhD|          Single|       Yes|       1|        0|         0|
+| 3|  35|   90000|   Bachelor|         Married|       Yes|       0|        1|         0|
+| 4|  28|   80000|     Master|        Divorced|        No|       0|        0|         1|
 ---
 
   - Dummy encoding
@@ -565,6 +565,13 @@ print('purchase_lb = \n', purchase_lb)
 df_lb[lb.classes_] = purchase_lb
 df_lb
 ```
+|  | age|  income|  education|  marital_status|  purchase|  Yes|  No|
+|-:|---:|-------:|----------:|---------------:|---------:|----:|---:|
+| 0|  25|   50000|   Bachelor|          Single|       Yes|    1|   0|
+| 1|  30|   75000|     Master|         Married|        No|    0|   1|
+| 2|  22|   60000|        PhD|          Single|       Yes|    1|   0|
+| 3|  35|   90000|   Bachelor|         Married|       Yes|    1|   0|
+| 4|  28|   80000|     Master|        Divorced|        No|    0|   1|
 ---
   - MultiLabelBinerizer
       - multi-class(여러개의 범주가 있는) 데이터를 이진수 컬럼으로 인코딩
@@ -1337,7 +1344,7 @@ sfm = SelectFromModel(estimator=clf)
 # 모형 구조 확인 및 출력을 pandas로 설정
 sfm.set_output(transform='pandas')
 ```
-<p>$\bf{\rm{\color{red}도저히아래형식을마크다운으로표현하는방법을못찾겠어서이미지로대체합니다..ㅠㅠ}}$</p>
+<p>$\bf{\rm{\color{red}도저히\ 아래\ 형식을\ 마크다운으로\ 표현하는\ 방법을\ 못찾겠어서\ 이미지로\ 대체합니다..ㅠㅠ}}$</p>
 
 ![임베디드 기법 종류 sfm](https://github.com/leejoohyunn/images/blob/main/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202023-12-03%20213806.png)
 
