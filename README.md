@@ -1918,7 +1918,7 @@ display(col_transformer) # 파이프라인 그래프로 구성 확인
 print(data_df)
 print(col_transformer.fit_transform(data_df))
 ```
-
+![columntransformer](https://github.com/leejoohyunn/images/blob/main/columntransformer)
 ```python
    height  weight   age
 0   165.0    70.0   NaN
@@ -1928,6 +1928,44 @@ print(col_transformer.fit_transform(data_df))
  [173.5  62.   18. ]
  [182.    nan  15. ]]
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+<p>$\bf{\rm{\color{red}height뿐만\ 아니라\ weight도\ 중앙값으로\ 대체했습니}}$</p>
+
+```python
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+import pandas as pd
+import numpy as np
+
+data_df = pd.DataFrame({
+    "height": [165, np.nan, 182],
+    "weight": [70, 62, np.nan],
+    "age": [np.nan, 18, 15]
+})
+
+# SimpleImputer를 사용해서 height의 null 값들은 평균으로, weight의 null 값들은 중앙값으로 출력
+col_transformer = ColumnTransformer([
+    ("Impute_mean", SimpleImputer(strategy="mean"), ["height"]),
+    ("Impute_median", SimpleImputer(strategy="median"), ["weight"])
+], remainder="passthrough")
+
+display(col_transformer)  # 파이프라인 그래프로 구성 확인
+print(data_df)
+print(col_transformer.fit_transform(data_df))
+
+```
+![ex_columntransformer](https://github.com/leejoohyunn/images/blob/main/ex_columntransformer)
+```python
+   height  weight   age
+0   165.0    70.0   NaN
+1     NaN    62.0  18.0
+2   182.0     NaN  15.0
+[[165.   70.    nan]
+ [173.5  62.   18. ]
+ [182.   66.   15. ]]
+```
+---
 ```python
 # SimpleImputer를 사용해서 mean과 median 값을 null에 넣고 
 # 나머지 열(column)에 대한 값은 상수로 -1 값을 넣어 줌
@@ -1942,6 +1980,44 @@ display(col_transformer2) # 파이프라인 그래프로 구성 확인
 print(data_df)
 print(col_transformer2.fit_transform(data_df))
 ```
-# ㅋㅋ
+![columntransformer2](https://github.com/leejoohyunn/images/blob/main/columntransformer2)
+```python
+   height  weight   age
+0   165.0    70.0   NaN
+1     NaN    62.0  18.0
+2   182.0     NaN  15.0
+[[165.   70.   -1. ]
+ [173.5  62.   18. ]
+ [182.   66.   15. ]]
 
+```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# SimpleImputer를 사용해서 mean과 median 값을 null에 넣고 
+# 나머지 열(column)에 대한 값은 상수로 0 값을 넣어 줌
+col_transformer2 = ColumnTransformer([
+    ("Impute_mean", SimpleImputer(strategy="mean"), ["height"]),
+    ("Impute_median", SimpleImputer(strategy="median"), ["weight"])
+],
+    remainder=SimpleImputer(strategy="constant", fill_value=0)
+)
+
+display(col_transformer2)  # 파이프라인 그래프로 구성 확인
+print(data_df)
+print(col_transformer2.fit_transform(data_df))
+
+```
+![ex_columntranformer2](https://github.com/leejoohyunn/images/blob/main/ex_columntransformer2)
+```python
+   height  weight   age
+0   165.0    70.0   NaN
+1     NaN    62.0  18.0
+2   182.0     NaN  15.0
+[[165.   70.    0. ]
+ [173.5  62.   18. ]
+ [182.   66.   15. ]]
+```
+---
 
