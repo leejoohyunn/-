@@ -588,6 +588,28 @@ df_mlb
 |  3 |       50 |      173 | f     | O            | bad       | ['math', 'english'] |
 |  4 |       90 |      177 | m     | A            | good      | ['science']         |
 
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.preprocessing import MultiLabelBinarizer
+
+# 데이터프레임 복사
+df_mlb = df.copy()
+
+# multi-class를 위한 컬럼 추가
+df_mlb['city'] = [['New York', 'Sanfrancisco'], ['Los Angeles', 'Sanfrancisco'], ['New York'], ['New York', 'Los Angeles'], ['Sanfrancisco']] # target: city, categorical, multi-class
+df_mlb
+```
+|    |   age |   income | education   | marital_status   | purchase   | city                         |
+|---:|------:|---------:|:------------|:-----------------|:-----------|:-----------------------------|
+|  0 |    25 |    50000 | Bachelor    | Single           | Yes        | ['New York', 'Sanfrancisco'] |
+|  1 |    30 |    75000 | Master      | Married          | No         | ['Los Angeles', 'Sanfrancisco']   |
+|  2 |    22 |    60000 | PhD         | Single           | Yes        | ['New York']                 |
+|  3 |    35 |    90000 | Bachelor    | Married          | Yes        | ['New York', 'Los Angeles']    |
+|  4 |    28 |    80000 | Master      | Divorced         | No         | ['Sanfrancisco']            |
+---
+
 ```python
 # MultiLabelBinarizer 객체를 생성하고 fit() 메소드를 호출하여 클래스를 인코딩
 mlb = MultiLabelBinarizer().fit(df_mlb.test)
@@ -608,6 +630,30 @@ mlb.classes_ = array(['english', 'math', 'science'], dtype=object)
 |  3 |       50 |      173 | f     | O            | bad       | ['math', 'english'] |         1 |      1 |         0 |
 |  4 |       90 |      177 | m     | A            | good      | ['science']         |         0 |      0 |         1 |
 
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# MultiLabelBinarizer 객체를 생성하고 fit() 메소드를 호출하여 클래스를 인코딩
+mlb = MultiLabelBinarizer().fit(df_mlb.city)
+
+# classes_ 속성을 사용하면 어떤 클래스가 인코딩되었는지 확인 가능
+print(f'{mlb.classes_ = }')
+
+# 인코딩된 데이터를 데이터프레임으로 변환
+df_mlb[mlb.classes_] = mlb.transform(df_mlb.city)
+df_mlb
+```
+mlb.classes_ = array(['Los Angeles', 'New York', 'Sanfrancisco'], dtype=object)
+|    |   age |   income | education   | marital_status   | purchase   | city                            |   Los Angeles |   New York |   Sanfrancisco |
+|---:|------:|---------:|:------------|:-----------------|:-----------|:--------------------------------|--------------:|-----------:|---------------:|
+|  0 |    25 |    50000 | Bachelor    | Single           | Yes        | ['New York', 'Sanfrancisco']    |             0 |          1 |              1 |
+|  1 |    30 |    75000 | Master      | Married          | No         | ['Los Angeles', 'Sanfrancisco'] |             1 |          0 |              1 |
+|  2 |    22 |    60000 | PhD         | Single           | Yes        | ['New York']                    |             0 |          1 |              0 |
+|  3 |    35 |    90000 | Bachelor    | Married          | Yes        | ['New York', 'Los Angeles']     |             1 |          1 |              0 |
+|  4 |    28 |    80000 | Master      | Divorced         | No         | ['Sanfrancisco']                |             0 |          0 |              1 |
+
+---
 ## 3.범주화
 ### 3.1 범주화(Discritization)
 - 연속형 변수를 구간별로 나누어 범주형 변수로 변환하는 것
@@ -634,6 +680,32 @@ df_kbd
 |  2 |       60 |      182 | m     | B            | bad       |            1 |            2 |
 |  3 |       50 |      173 | f     | O            | bad       |            0 |            1 |
 |  4 |       90 |      177 | m     | A            | good      |            2 |            2 |
+
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.preprocessing import KBinsDiscretizer
+
+# 데이터프레임 복사
+df_kbd = df.copy()
+
+# KBinsDiscretizer 객체 생성과 fit을 적용
+kbd = KBinsDiscretizer(n_bins=3, encode='ordinal').fit(df[['age', 'income']])
+
+# kbd.transform() : 인코딩 변환
+# 인코딩된 데이터를 데이터프레임으로 변환
+df_kbd[['age_bin', 'income_bin']] = kbd.transform(df[['age', 'income']])
+df_kbd
+```
+|    |   age |   income | education   | marital_status   | purchase   |   age_bin |   income_bin |
+|---:|------:|---------:|:------------|:-----------------|:-----------|----------:|-------------:|
+|  0 |    25 |    50000 | Bachelor    | Single           | Yes        |         0 |            0 |
+|  1 |    30 |    75000 | Master      | Married          | No         |         2 |            1 |
+|  2 |    22 |    60000 | PhD         | Single           | Yes        |         0 |            0 |
+|  3 |    35 |    90000 | Bachelor    | Married          | Yes        |         2 |            2 |
+|  4 |    28 |    80000 | Master      | Divorced         | No         |         1 |            2 |
+---
 ---
 # pp-피쳐엔지니어링
 ## 2. 피쳐 추출
@@ -657,6 +729,30 @@ print(f'{target_names = }')
 X.shape = (150, 4), y.shape = (150,)
 target_names = ['setosa', 'versicolor', 'virginica']
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn import datasets
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+# wine 데이터셋을 로드
+wine = datasets.load_wine()
+
+X = wine.data  # wine 데이터셋의 피쳐들
+y = wine.target  # wine 데이터셋의 타겟
+target_names = list(wine.target_names)  # wine 데이터셋의 타겟 이름
+
+print(f'{X.shape = }, {y.shape = }')  # 178개 데이터, 13 features
+print(f'{target_names = }')
+```
+
+```python
+X.shape = (178, 13), y.shape = (178,)
+target_names = ['class_0', 'class_1', 'class_2']
+```
+---
 ```python
 # PCA의 객체를 생성, 차원은 2차원으로 설정(현재는 4차원)
 pca = PCA(n_components=2)
@@ -676,6 +772,37 @@ pca_fitted.components_ = array([[ 0.36138659, -0.08452251,  0.85667061,  0.35828
 pca_fitted.explained_variance_ratio_ = array([0.92461872, 0.05306648])
 X_pca.shape = (150, 2)
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# PCA의 객체를 생성, 차원은 2차원으로 설정(현재는 4차원)
+pca = PCA(n_components=2)
+
+# PCA를 수행. PCA는 비지도 학습이므로 y값을 넣지 않음
+pca_fitted = pca.fit(X)
+
+print(f'{pca_fitted.components_ = }')  # 주성분 벡터
+print(f'{pca_fitted.explained_variance_ratio_ = }') # 주성분 벡터의 설명할 수 있는 분산 비율
+
+X_pca = pca_fitted.transform(X) # 주성분 벡터로 데이터를 변환
+print(f'{X_pca.shape = }')  # 4차원 데이터가 2차원 데이터로 변환됨
+```
+```python
+pca_fitted.components_ = array([[ 1.65926472e-03, -6.81015556e-04,  1.94905742e-04,
+        -4.67130058e-03,  1.78680075e-02,  9.89829680e-04,
+         1.56728830e-03, -1.23086662e-04,  6.00607792e-04,
+         2.32714319e-03,  1.71380037e-04,  7.04931645e-04,
+         9.99822937e-01],
+       [ 1.20340617e-03,  2.15498184e-03,  4.59369254e-03,
+         2.64503930e-02,  9.99344186e-01,  8.77962152e-04,
+        -5.18507284e-05, -1.35447892e-03,  5.00440040e-03,
+         1.51003530e-02, -7.62673115e-04, -3.49536431e-03,
+        -1.77738095e-02]])
+pca_fitted.explained_variance_ratio_ = array([0.99809123, 0.00173592])
+X_pca.shape = (178, 2)
+```
+---
 ```python
 # LDA의 객체를 생성. 차원은 2차원으로 설정(현재는 4차원)
 lda = LinearDiscriminantAnalysis(n_components=2)
@@ -696,6 +823,35 @@ lda_fitted.coef_=array([[  6.31475846,  12.13931718, -16.94642465, -20.77005459]
 lda_fitted.explained_variance_ratio_=array([0.9912126, 0.0087874])
 X_lda.shape = (150, 2)
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# LDA의 객체를 생성. 차원은 2차원으로 설정(현재는 4차원)
+lda = LinearDiscriminantAnalysis(n_components=2)
+
+# LDA를 수행. LDA는 지도학습이므로 타겟값이 필요
+lda_fitted = lda.fit(X, y)
+
+print(f'{lda_fitted.coef_=}') # LDA의 계수
+print(f'{lda_fitted.explained_variance_ratio_=}') # LDA의 분산에 대한 설명력
+
+X_lda = lda_fitted.transform(X)
+print(f'{X_lda.shape = }')  # 4차원 데이터가 2차원 데이터로 변환됨
+```
+```python
+lda_fitted.coef_=array([[ 2.85542117e+00, -4.89788666e-02,  5.23156990e+00, -7.77422596e-01,
+         6.62170776e-03, -2.16976970e+00, 4.85310738e+00,  2.36037857e+00, -9.78422688e-01, -7.86790206e-01,          2.35758911e-01,  4.04832027e+00, 1.40369442e-02],
+       [-2.12348259e+00, -7.68274072e-01, -5.77105386e+00, 3.49607787e-01,  1.31672488e-03,  3.03762476e-02,
+         1.34898232e+00,  4.15204322e+00,  7.48631160e-01, -6.54459561e-01,  3.81286126e+00, -3.42724866e-02,
+        -6.83988909e-03],
+       [-3.68803859e-01,  1.19660859e+00,  2.10587916e+00, 4.38453756e-01, -1.00868380e-02,  2.62207706e+00,
+        -7.96064750e+00, -9.04286258e+00,  9.52942959e-02, 1.93515106e+00, -5.92964428e+00, -4.92536562e+00,
+        -7.13640797e-03]])
+lda_fitted.explained_variance_ratio_=array([0.68747889, 0.31252111])
+X_lda.shape = (178, 2)
+```
+---
 ```python
 # 시각화 하기
 import matplotlib.pyplot as plt
@@ -719,6 +875,34 @@ ax[1].set_title('LDA of IRIS dataset')
 plt.show()
 ```
 ![subplot 시각화 이미지](https://github.com/leejoohyunn/images/blob/main/%EB%8D%B0%EC%A0%84%EC%9D%B4%EB%AF%B8%EC%A7%80.png)
+
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# 시각화 하기
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+# Seaborn을 이용하기 위해 데이터프레임으로 변환
+df_pca = pd.DataFrame(X_pca, columns=['PC1', 'PC2'])
+df_lda = pd.DataFrame(X_lda, columns=['LD1', 'LD2'])
+y = pd.Series(y).replace({0:'class_0', 1:'class_1', 2:'class_2'})
+
+# subplot으로 시각화
+fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+
+sns.scatterplot(df_pca, x='PC1', y='PC2', hue=y, style=y, ax=ax[0], palette='Set1')
+ax[0].set_title('PCA of Wine dataset')
+
+sns.scatterplot(df_lda, x='LD1', y='LD2', hue=y, style=y, ax=ax[1], palette='Set1')
+ax[1].set_title('LDA of Wine dataset')
+
+plt.show()
+```
+![wine subplot 시각화 이미지](https://github.com/leejoohyunn/images/blob/main/wine%20%EC%9D%B4%EB%AF%B8%EC%A7%80.png)
+---
 ## 3.피쳐 선택 기법
   - 종속변수 활용여부에 따라
       - supervised: 종속변수를 활용해 선택
@@ -764,6 +948,47 @@ X_selected[:5] = array([[5.1, 1.4, 0.2],
        [4.6, 1.5, 0.2],
        [5. , 1.4, 0.2]])
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn import datasets
+from sklearn.feature_selection import VarianceThreshold
+
+# Wine 데이터셋을 로드
+Wine = datasets.load_wine()
+
+X = wine.data # iris 데이터셋의 피쳐들
+y = wine.target # iris 데이터셋의 타겟
+X_names = wine.feature_names # iris 데이터셋의 피쳐 이름
+y_names = wine.target_names # iris 데이터셋의 타겟 이름
+
+# 분산이 0.2 이상인 피쳐들만 선택하도록 학습
+sel = VarianceThreshold(threshold=0.2).fit(X)
+print(f'{sel.variances_ = }') # 각 피쳐의 분산 확인
+
+# 분산이 0.2 이상인 피쳐들만 선택 적용
+X_selected = sel.transform(X) # 분산이 0.2 이상인 피쳐들만 선택
+X_selected_names = [X_names[i] for i in sel.get_support(indices=True)] # 선택된 피쳐들의 이름
+
+print(f'{X_selected_names = }')
+print(f'{X_selected[:5] = }')
+```
+```python
+sel.variances_ = array([6.55359730e-01, 1.24100408e+00, 7.48418003e-02, 1.10900306e+01, 2.02843328e+02,             3.89489032e-01, 9.92113512e-01, 1.54016191e-02, 3.25754248e-01, 5.34425585e+00, 5.19514497e-02,              5.01254463e-01, 9.86096010e+04])
+X_selected_names = ['alcohol', 'malic_acid', 'alcalinity_of_ash', 'magnesium', 'total_phenols', 'flavanoids', 'proanthocyanins', 'color_intensity', 'od280/od315_of_diluted_wines', 'proline']
+X_selected[:5] = array([[1.423e+01, 1.710e+00, 1.560e+01, 1.270e+02, 2.800e+00, 3.060e+00,
+        2.290e+00, 5.640e+00, 3.920e+00, 1.065e+03],
+       [1.320e+01, 1.780e+00, 1.120e+01, 1.000e+02, 2.650e+00, 2.760e+00,
+        1.280e+00, 4.380e+00, 3.400e+00, 1.050e+03],
+       [1.316e+01, 2.360e+00, 1.860e+01, 1.010e+02, 2.800e+00, 3.240e+00,
+        2.810e+00, 5.680e+00, 3.170e+00, 1.185e+03],
+       [1.437e+01, 1.950e+00, 1.680e+01, 1.130e+02, 3.850e+00, 3.490e+00,
+        2.180e+00, 7.800e+00, 3.450e+00, 1.480e+03],
+       [1.324e+01, 2.590e+00, 2.100e+01, 1.180e+02, 2.800e+00, 2.690e+00,
+        1.820e+00, 4.320e+00, 2.930e+00, 7.350e+02]])
+```
+---
 > F-value
 >   - 두 모집단(확률변수)의 분산의 비율을 나타내는 값
 >   - ANOVA, Regression에서는 모형이 설명하는 분산/잔자의 분산
@@ -824,6 +1049,76 @@ sel_chi2.pvalues_ = array([4.47651499e-03, 1.56395980e-01, 5.53397228e-26, 2.758
 sel_chi2.get_support() = array([False, False,  True,  True])
 Selected features:  ['petal length (cm)', 'petal width (cm)']
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_classif, f_regression, chi2
+
+# k개의 베스트 피쳐를 선택
+sel_fc = SelectKBest(f_classif, k=2).fit(X, y)
+print('f_classif: ')
+print(f'{sel_fc.scores_ = }')
+print(f'{sel_fc.pvalues_ = }')
+print(f'{sel_fc.get_support() = }')
+print('Selected features: ', [X_names[i] for i in sel_fc.get_support(indices=True)]) # 선택된 피쳐들의 이름
+
+sel_fr = SelectKBest(f_regression, k=2).fit(X, y)
+print('\nf_regression: ')
+print(f'{sel_fr.scores_ = }')
+print(f'{sel_fr.pvalues_ = }')
+print(f'{sel_fr.get_support() = }')
+print('Selected features: ', [X_names[i] for i in sel_fr.get_support(indices=True)]) # 선택된 피쳐들의 이름
+
+sel_chi2 = SelectKBest(chi2, k=2).fit(X, y)
+print('\nchi2: ')
+print(f'{sel_chi2.scores_ = }')
+print(f'{sel_chi2.pvalues_ = }')
+print(f'{sel_chi2.get_support() = }')
+print('Selected features: ', [X_names[i] for i in sel_chi2.get_support(indices=True)]) # 선택된 피쳐들의 이름
+```
+```python
+f_classif: 
+sel_fc.scores_ = array([135.07762424,  36.94342496,  13.3129012 ,  35.77163741,
+        12.42958434,  93.73300962, 233.92587268,  27.57541715,
+        30.27138317, 120.66401844, 101.31679539, 189.97232058,
+       207.9203739 ])
+sel_fc.pvalues_ = array([3.31950380e-36, 4.12722880e-14, 4.14996797e-06, 9.44447294e-14,
+       8.96339544e-06, 2.13767002e-28, 3.59858583e-50, 3.88804090e-11,
+       5.12535874e-12, 1.16200802e-33, 5.91766222e-30, 1.39310496e-44,
+       5.78316836e-47])
+sel_fc.get_support() = array([False, False, False, False, False, False,  True, False, False,
+       False, False, False,  True])
+Selected features:  ['flavanoids', 'proline']
+
+f_regression: 
+sel_fr.scores_ = array([2.12496324e+01, 4.17269323e+01, 4.34814672e-01, 6.44956586e+01,
+       8.05344576e+00, 1.88537094e+02, 4.48671871e+02, 5.53438805e+01,
+       5.83949501e+01, 1.33652594e+01, 1.08396065e+02, 2.88755043e+02,
+       1.18116155e+02])
+sel_fr.pvalues_ = array([7.72325331e-06, 9.91770326e-10, 5.10497750e-01, 1.33539479e-13,
+       5.07541577e-03, 1.23405114e-29, 2.73665226e-50, 4.28673904e-12,
+       1.32725092e-12, 3.38241649e-04, 4.40539946e-20, 5.88616358e-39,
+       2.23131917e-21])
+sel_fr.get_support() = array([False, False, False, False, False, False,  True, False, False,
+       False, False,  True, False])
+Selected features:  ['flavanoids', 'od280/od315_of_diluted_wines']
+
+chi2: 
+sel_chi2.scores_ = array([5.44549882e+00, 2.80686046e+01, 7.43380598e-01, 2.93836955e+01,
+       4.50263809e+01, 1.56230759e+01, 6.33343081e+01, 1.81548480e+00,
+       9.36828307e+00, 1.09016647e+02, 5.18253981e+00, 2.33898834e+01,
+       1.65400671e+04])
+sel_chi2.pvalues_ = array([6.56938863e-02, 8.03489047e-07, 6.89567769e-01, 4.16304971e-07,
+       1.66972759e-10, 4.05034646e-04, 1.76656548e-14, 4.03433989e-01,
+       9.24066398e-03, 2.12488671e-24, 7.49248322e-02, 8.33587826e-06,
+       0.00000000e+00])
+sel_chi2.get_support() = array([False, False, False, False, False, False, False, False, False,
+        True, False, False,  True])
+Selected features:  ['color_intensity', 'proline']
+```
+---
 ### 3.2 래퍼 기법(wrapper method)
 >svc(Support Vector Classification)와 SVM(Support Vector Machine)
 >    - SVC(Support Vector Classification)는 분류를 위한 서포트 벡터 머신
@@ -887,6 +1182,75 @@ X_selected[:5] = array([[5.1, 1.4, 0.2],
        [4.6, 1.5, 0.2],
        [5. , 1.4, 0.2]])
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# RFE(Recursive Feature Elimination) 적용
+from sklearn.datasets import load_wine
+from sklearn.feature_selection import RFE, RFECV, SelectFromModel, SequentialFeatureSelector
+from sklearn.svm import SVC, SVR
+
+# wine 데이터셋 로드
+X, y = load_wine(return_X_y=True)
+
+# 분류기 SVC 객체 생성, 선형분류, 3개의 클래스 
+svc = SVR(kernel="linear", C=3)
+
+# RFE 객체 생성, 2개의 피쳐 선택, 1개씩 제거 
+rfe = RFE(estimator=svc, n_features_to_select=2, step=1)
+# RFE+CV(Cross Validation), 5개의 폴드, 1개씩 제거
+rfe_cv = RFECV(estimator=svc, step=1, cv=5) 
+
+# 데이터셋에 RFE 적용
+rfe.fit(X, y)
+print('RFE Rank: ', rfe.ranking_)
+
+# rank가 1인 피쳐들만 선택
+X_selected = rfe.transform(X) 
+X_selected_names = [X_names[i] for i in rfe.get_support(indices=True)] # 선택된 피쳐들의 이름
+
+print(f'{X_selected_names = }')
+print(f'{X_selected[:5] = }')
+
+# 데이터셋에 RFECV 적용
+rfe_cv.fit(X, y)
+print('RFECV Rank: ', rfe_cv.ranking_)
+
+# rank가 1인 피쳐들만 선택
+X_selected = rfe_cv.transform(X) 
+X_selected_names = [X_names[i] for i in rfe_cv.get_support(indices=True)] # 선택된 피쳐들의 이름
+
+print(f'{X_selected_names = }')
+print(f'{X_selected[:5] = }')
+```
+```python
+RFE Rank:  [ 4  9  6  7 11  5  1  2 10  8  1  3 12]
+X_selected_names = ['flavanoids', 'hue']
+X_selected[:5] = array([[3.06, 1.04],
+       [2.76, 1.05],
+       [3.24, 1.03],
+       [3.49, 0.86],
+       [2.69, 1.04]])
+RFECV Rank:  [1 1 1 1 1 1 1 1 1 1 1 1 1]
+X_selected_names = ['alcohol', 'malic_acid', 'ash', 'alcalinity_of_ash', 'magnesium', 'total_phenols', 'flavanoids', 'nonflavanoid_phenols', 'proanthocyanins', 'color_intensity', 'hue', 'od280/od315_of_diluted_wines', 'proline']
+X_selected[:5] = array([[1.423e+01, 1.710e+00, 2.430e+00, 1.560e+01, 1.270e+02, 2.800e+00,
+        3.060e+00, 2.800e-01, 2.290e+00, 5.640e+00, 1.040e+00, 3.920e+00,
+        1.065e+03],
+       [1.320e+01, 1.780e+00, 2.140e+00, 1.120e+01, 1.000e+02, 2.650e+00,
+        2.760e+00, 2.600e-01, 1.280e+00, 4.380e+00, 1.050e+00, 3.400e+00,
+        1.050e+03],
+       [1.316e+01, 2.360e+00, 2.670e+00, 1.860e+01, 1.010e+02, 2.800e+00,
+        3.240e+00, 3.000e-01, 2.810e+00, 5.680e+00, 1.030e+00, 3.170e+00,
+        1.185e+03],
+       [1.437e+01, 1.950e+00, 2.500e+00, 1.680e+01, 1.130e+02, 3.850e+00,
+        3.490e+00, 2.400e-01, 2.180e+00, 7.800e+00, 8.600e-01, 3.450e+00,
+        1.480e+03],
+       [1.324e+01, 2.590e+00, 2.870e+00, 2.100e+01, 1.180e+02, 2.800e+00,
+        2.690e+00, 3.900e-01, 1.820e+00, 4.320e+00, 1.040e+00, 2.930e+00,
+        7.350e+02]])
+```
+---
 ```python
 # SFS(Sequential Feature Selector) : 순차적으로 특성을 선택하는 방법
 
@@ -919,6 +1283,43 @@ X_selected[:5] = array([[1.4, 0.2],
        [1.5, 0.2],
        [1.4, 0.2]])
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# SFS(Sequential Feature Selector) : 순차적으로 특성을 선택하는 방법
+
+from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.datasets import load_wine
+
+# 데이터를 로드하고, 분류기를 초기화한 후 SFS를 적용
+X, y = load_wine(return_X_y=True)
+knn = KNeighborsClassifier(n_neighbors=3)
+sfs = SequentialFeatureSelector(knn, n_features_to_select=2, direction='backward')
+
+# SFS를 학습하고, 선택된 특성을 출력
+sfs.fit(X, y)
+print('SFS selected: ', sfs.get_support())
+
+# 선택된 피쳐들만 선택
+X_selected = sfs.transform(X) 
+X_selected_names = [X_names[i] for i in sfs.get_support(indices=True)] # 선택된 피쳐들의 이름
+
+print(f'{X_selected_names = }')
+print(f'{X_selected[:5] = }')
+```
+```python
+SFS selected:  [False False False False False False  True False False  True False False
+ False]
+X_selected_names = ['flavanoids', 'color_intensity']
+X_selected[:5] = array([[3.06, 5.64],
+       [2.76, 4.38],
+       [3.24, 5.68],
+       [3.49, 7.8 ],
+       [2.69, 4.32]])
+```
+---
 ### 3.3 임베디드 기법(Embedded Mthod)
   - 임베디드 기법
       - SelectFromModel
@@ -936,7 +1337,28 @@ sfm = SelectFromModel(estimator=clf)
 # 모형 구조 확인 및 출력을 pandas로 설정
 sfm.set_output(transform='pandas')
 ```
-# 아 이거 몰라
+<p>$\bf{\rm{\color{red}도저히아래형식을마크다운으로표현하는방법을못찾겠어서이미지로대체합니다..ㅠㅠ}}$</p>
+
+![임베디드 기법 종류 sfm](https://github.com/leejoohyunn/images/blob/main/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202023-12-03%20213806.png)
+
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.feature_selection import SelectFromModel
+from sklearn import tree
+from sklearn.datasets import load_wine
+
+# 데이터를 로드하고, 분류기를 초기화한 후 SFS를 적용
+X, y = load_wine(return_X_y=True)
+clf = tree.DecisionTreeClassifier()
+sfm = SelectFromModel(estimator=clf)
+
+# 모형 구조 확인 및 출력을 pandas로 설정
+sfm.set_output(transform='pandas')
+```
+![임베디드 기법 종류 sfm](https://github.com/leejoohyunn/images/blob/main/wine%20sfm)
+---
 
 ```python
 # 모형 학습
@@ -949,7 +1371,42 @@ X_selected.columns = [X_names[i] for i in sfm.get_support(indices=True)] # 선�
 
 X_selected.head()
 ```
-# 시댕
+```python
+SFM threshold:  0.25
+```
+|    |   Feature_3 |
+|---:|------------:|
+|  0 |         0.2 |
+|  1 |         0.2 |
+|  2 |         0.2 |
+|  3 |         0.2 |
+|  4 |         0.2 |
+
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```pyton
+# 모형 학습
+sfm.fit(X, y)
+print('SFM threshold: ', sfm.threshold_)
+
+# 선택된 피쳐들만 선택
+X_selected = sfm.transform(X) 
+X_selected.columns = [X_names[i] for i in sfm.get_support(indices=True)] # 선택된 피쳐들의 이름
+
+X_selected.head()
+```
+```python
+SFM threshold:  0.07692307692307693
+```
+|    |   flavanoids |   od280/od315_of_diluted_wines |   proline |
+|---:|-------------:|-------------------------------:|----------:|
+|  0 |         3.06 |                           3.92 |      1065 |
+|  1 |         2.76 |                           3.4  |      1050 |
+|  2 |         3.24 |                           3.17 |      1185 |
+|  3 |         3.49 |                           3.45 |      1480 |
+|  4 |         2.69 |                           2.93 |       735 |
+---
 
 ---
 # pp-파이프라인
@@ -993,6 +1450,47 @@ Standard Scaled:
 Estimate :  [0 0 0]
 Accuracy :  0.9733333333333334
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.feature_selection import SelectKBest, f_classif # 피처선택 메서드
+from sklearn.preprocessing import StandardScaler # 데이터 표준화
+from sklearn.tree import DecisionTreeClassifier # 의사결정나무 분류기
+from sklearn.datasets import load_wine # iris 데이터세트
+ 
+# iris 데이터세트 로드
+X, y = load_wine(return_X_y=True)
+ 
+## 피쳐 선택
+feat_sel = SelectKBest(f_classif, k=2)
+X_selected = feat_sel.fit_transform(X, y)
+print('Selected features:', feat_sel.get_feature_names_out())
+
+## 표준화
+scaler = StandardScaler()
+scaler.fit(X_selected)
+X_transformed = scaler.transform(X_selected)
+print('Standard Scaled: \n', X_transformed[:5, :])
+
+## 모델 학습
+clf = DecisionTreeClassifier(max_depth=3)
+clf.fit(X_transformed, y)
+print('Estimate : ', clf.predict(X_transformed)[:3])
+print('Accuracy : ', clf.score(X_transformed, y))
+```
+```python
+Selected features: ['x6' 'x12']
+Standard Scaled: 
+ [[ 1.03481896  1.01300893]
+ [ 0.73362894  0.96524152]
+ [ 1.21553297  1.39514818]
+ [ 1.46652465  2.33457383]
+ [ 0.66335127 -0.03787401]]
+Estimate :  [0 0 0]
+Accuracy :  0.9269662921348315
+```
+---
   - 파이프라인을 사용한 경우
       - 파이프라인은 (key, value)의 리스트를 구성해 만듦
       -  파이프라인을 사용하면, 변환된 데이터를 별도로 저장하지 않고 연속적으로 사용하므로 속도 개선 및 메모리 절약됨
@@ -1018,9 +1516,67 @@ pipeline.fit(X, y) ## 모형 학습
 print('Estimate : ', pipeline.predict(X)[:3]) ## 예측
 print('Accuracy : ', pipeline.score(X, y)) ## 성능 평가
 ```
-# 아 이거 또 나옴
+![pipeline iris](https://github.com/leejoohyunn/images/blob/main/pipeline%20iris)
+```python
+Estimate :  [0 0 0]
+Accuracy :  0.9733333333333334
+```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.pipeline import Pipeline # 파이프라인 구성을 위한 함수
+from sklearn.feature_selection import SelectKBest, f_classif # 피처선택 메서드
+from sklearn.preprocessing import StandardScaler # 데이터 표준화
+from sklearn.tree import DecisionTreeClassifier # 의사결정나무 분류기
+from sklearn.datasets import load_wine # iris 데이터세트
+ 
+# iris 데이터세트 로드
+X, y = load_wine(return_X_y=True)
+ 
+## pipeline 구축
+pipeline = Pipeline([
+    ('Feature_Selection', SelectKBest(f_classif, k=2)), ## 피쳐 선택
+    ('Standardization', StandardScaler()),  ## 표준화
+    ('Decision_Tree', DecisionTreeClassifier(max_depth=3)) ## 학습 모델
+])
+display(pipeline) # 파이프라인 그래프로 구성 확인
+
+pipeline.fit(X, y) ## 모형 학습
+print('Estimate : ', pipeline.predict(X)[:3]) ## 예측
+print('Accuracy : ', pipeline.score(X, y)) ## 성능 평가
+```
+![pipeline wine](https://github.com/leejoohyunn/images/blob/main/pipeline%20wine)
+```python
+Estimate :  [0 0 0]
+Accuracy :  0.9269662921348315
+```
+---
   - make_pipeline() 함수를 사용하여 파이프라인을 만들 수 있음
-# 아 제발
+```python
+from sklearn.pipeline import make_pipeline # 파이프라인 구성을 위한 함수
+
+pipeline_auto = make_pipeline(SelectKBest(f_classif, k=2), 
+              StandardScaler(), 
+              DecisionTreeClassifier(max_depth=3))
+display(pipeline_auto) # 파이프라인 그래프로 구성 확인
+```
+![make_pipeline](https://github.com/leejoohyunn/images/blob/main/make_pipeline)
+
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.pipeline import make_pipeline # 파이프라인 구성을 위한 함수
+
+pipeline_auto = make_pipeline(SelectKBest(f_classif, k=2), 
+              StandardScaler(), 
+              DecisionTreeClassifier(max_depth=3))
+display(pipeline_auto) # 파이프라인 그래프로 구성 확인
+```
+![make_pipeline](https://github.com/leejoohyunn/images/blob/main/make_pipeline)
+---
+  
   - 파이프라인 내부의 중간결과 확인하기
       - pipeline의 인덱스나 named_steps로 확인이 가능
 ```python
@@ -1041,6 +1597,28 @@ Standard Scaled:
  [-1.2833891  -1.3154443 ]
  [-1.34022653 -1.3154443 ]]
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# pipiline의 Feature_Selection step의 결과 확인
+# pipeline.named_steps['Feature_Selection'] == pipeline[0]
+# pipeline.named_steps['Standardization'] == pipeline[1]
+# pipeline.named_steps['Decision_Tree'] == pipeline[2]
+print('Selected features:', pipeline.named_steps['Feature_Selection'].get_feature_names_out())
+X_transformed = pipeline[1].transform(X_selected)
+print('Standard Scaled: \n', X_transformed[:5, :])
+```
+```python
+Selected features: ['x6' 'x12']
+Standard Scaled: 
+ [[ 1.03481896  1.01300893]
+ [ 0.73362894  0.96524152]
+ [ 1.21553297  1.39514818]
+ [ 1.46652465  2.33457383]
+ [ 0.66335127 -0.03787401]]
+```
+---
 ## 2.파이프라인의 결합
 ### 2.1 수치형 데이터 파이프라인 처리
 ```python
@@ -1084,6 +1662,75 @@ None
 numeric_col: ['carat', 'depth', 'table', 'x', 'y', 'z']
 category_col: ['cut', 'color', 'clarity']
 ```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+from sklearn.datasets import fetch_california_housing
+import pandas as pd
+
+# Load the California housing dataset
+california_housing = fetch_california_housing()
+
+# Create a DataFrame from the dataset
+X = pd.DataFrame(california_housing.data, columns=california_housing.feature_names)
+y = pd.Series(california_housing.target, name='MedHouseVal')
+
+# Display information about the dataset
+print(X.info())
+
+# Display the first few rows of the DataFrame
+print(X.head())
+
+# Display the target variable
+print(y.head())
+
+# Separate data types
+numeric_col = list(X.select_dtypes(exclude='category').columns)
+category_col = list(X.select_dtypes(include='category').columns)
+print(f'numeric_col: {numeric_col}')
+print(f'category_col: {category_col}')
+```
+```python
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 20640 entries, 0 to 20639
+Data columns (total 8 columns):
+ #   Column      Non-Null Count  Dtype  
+---  ------      --------------  -----  
+ 0   MedInc      20640 non-null  float64
+ 1   HouseAge    20640 non-null  float64
+ 2   AveRooms    20640 non-null  float64
+ 3   AveBedrms   20640 non-null  float64
+ 4   Population  20640 non-null  float64
+ 5   AveOccup    20640 non-null  float64
+ 6   Latitude    20640 non-null  float64
+ 7   Longitude   20640 non-null  float64
+dtypes: float64(8)
+memory usage: 1.3 MB
+None
+   MedInc  HouseAge  AveRooms  AveBedrms  Population  AveOccup  Latitude  \
+0  8.3252      41.0  6.984127   1.023810       322.0  2.555556     37.88   
+1  8.3014      21.0  6.238137   0.971880      2401.0  2.109842     37.86   
+2  7.2574      52.0  8.288136   1.073446       496.0  2.802260     37.85   
+3  5.6431      52.0  5.817352   1.073059       558.0  2.547945     37.85   
+4  3.8462      52.0  6.281853   1.081081       565.0  2.181467     37.85   
+
+   Longitude  
+0    -122.23  
+1    -122.22  
+2    -122.24  
+3    -122.25  
+4    -122.25  
+0    4.526
+1    3.585
+2    3.521
+3    3.413
+4    3.422
+Name: MedHouseVal, dtype: float64
+numeric_col: ['MedInc', 'HouseAge', 'AveRooms', 'AveBedrms', 'Population', 'AveOccup', 'Latitude', 'Longitude']
+category_col: []
+```
+---
 ```python
 # 파이프라인 구축
 numeric_pipeline = Pipeline(
@@ -1098,7 +1745,43 @@ display(numeric_pipeline) # 파이프라인 그래프로 구성 확인
 numerical_data_piped = numeric_pipeline.fit_transform(X[numeric_col])
 pd.DataFrame(numerical_data_piped, columns=numeric_col).head()
 ```
-# ㅋㅋㅋ 그만 나와라
+![pipeline learn](https://github.com/leejoohyunn/images/blob/main/pipline%20learn)
+|    |    carat |     depth |     table |        x |        y |        z |
+|---:|---------:|----------:|----------:|---------:|---------:|---------:|
+|  0 | -1.19817 | -0.174092 | -1.09967  | -1.58784 | -1.5362  | -1.57113 |
+|  1 | -1.24036 | -1.36074  |  1.58553  | -1.64133 | -1.65877 | -1.74117 |
+|  2 | -1.19817 | -3.38502  |  3.37566  | -1.49869 | -1.4574  | -1.74117 |
+|  3 | -1.07159 |  0.454133 |  0.242928 | -1.36497 | -1.31731 | -1.28772 |
+|  4 | -1.02939 |  1.08236  |  0.242928 | -1.24017 | -1.21224 | -1.11767 |
+
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+```python
+# 파이프라인 구축
+numeric_pipeline = Pipeline(
+    steps=[
+        ('imputer', SimpleImputer(strategy='mean')), # 평균값으로 Nan값 채워주기
+        ('scaler', StandardScaler()) # 표준화
+    ])
+
+display(numeric_pipeline) # 파이프라인 그래프로 구성 확인
+
+# 파이프라인 학습
+numerical_data_piped = numeric_pipeline.fit_transform(X[numeric_col])
+pd.DataFrame(numerical_data_piped, columns=numeric_col).head()
+```
+![pipeline learn](https://github.com/leejoohyunn/images/blob/main/pipline%20learn)
+
+|    |    MedInc |   HouseAge |   AveRooms |   AveBedrms |   Population |   AveOccup |   Latitude |   Longitude |
+|---:|----------:|-----------:|-----------:|------------:|-------------:|-----------:|-----------:|------------:|
+|  0 |  2.34477  |   0.982143 |   0.628559 |  -0.153758  |    -0.974429 | -0.0495965 |    1.05255 |    -1.32784 |
+|  1 |  2.33224  |  -0.607019 |   0.327041 |  -0.263336  |     0.861439 | -0.0925122 |    1.04318 |    -1.32284 |
+|  2 |  1.7827   |   1.85618  |   1.15562  |  -0.0490164 |    -0.820777 | -0.0258425 |    1.0385  |    -1.33283 |
+|  3 |  0.932968 |   1.85618  |   0.156966 |  -0.0498329 |    -0.766028 | -0.0503293 |    1.0385  |    -1.33782 |
+|  4 | -0.012881 |   1.85618  |   0.344711 |  -0.0329059 |    -0.759847 | -0.0856158 |    1.0385  |    -1.33782 |
+---
+
 ### 2.2 범주형 데이터 파이프라인 처리
 ```python
 from sklearn.impute import SimpleImputer
@@ -1120,7 +1803,66 @@ category_colnames = category_pipeline[1].get_feature_names_out(category_col)
 # 파이프라인 이후 데이터(array형 -> 데이터프레임)
 pd.DataFrame(category_data_piped, columns=category_colnames).head()
 ```
-# 이런
+![범주형 데이터 파이프라인 처리](https://github.com/leejoohyunn/images/blob/main/%EB%B2%94%EC%A3%BC%ED%98%95%EB%8D%B0%EC%9D%B4%ED%84%B0%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8)
+|    |   cut_Fair |   cut_Good |   cut_Ideal |   cut_Premium |   cut_Very Good |   color_D |   color_E |   color_F |   color_G |   color_H |   color_I |   color_J |   clarity_I1 |   clarity_IF |   clarity_SI1 |   clarity_SI2 |   clarity_VS1 |   clarity_VS2 |   clarity_VVS1 |   clarity_VVS2 |
+|---:|-----------:|-----------:|------------:|--------------:|----------------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|-------------:|-------------:|--------------:|--------------:|--------------:|--------------:|---------------:|---------------:|
+|  0 |          0 |          0 |           1 |             0 |               0 |         0 |         1 |         0 |         0 |         0 |         0 |         0 |            0 |            0 |             0 |             1 |             0 |             0 |              0 |              0 |
+|  1 |          0 |          0 |           0 |             1 |               0 |         0 |         1 |         0 |         0 |         0 |         0 |         0 |            0 |            0 |             1 |             0 |             0 |             0 |              0 |              0 |
+|  2 |          0 |          1 |           0 |             0 |               0 |         0 |         1 |         0 |         0 |         0 |         0 |         0 |            0 |            0 |             0 |             0 |             1 |             0 |              0 |              0 |
+|  3 |          0 |          0 |           0 |             1 |               0 |         0 |         0 |         0 |         0 |         0 |         1 |         0 |            0 |            0 |             0 |             0 |             0 |             1 |              0 |              0 |
+|  4 |          0 |          1 |           0 |             0 |               0 |         0 |         0 |         0 |         0 |         0 |         0 |         1 |            0 |            0 |             0 |             1 |             0 |             0 |              0 |              0 |
+
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+<p>$\bf{\rm{\color{red}california\ housing 으로 \ 하니까 \ 유효성 \ 검사에서 \ 자꾸\  오류가 \ 발생해 \ diamond\  파이프처리에서 \ 비어있는 \ 값을 \ 'missing' \ 상수값으로 \ 처리한것과 \ 달리, \ 가장 \ 빈번한\  값으로 \ 채워넣었습니다..ㅠㅠ\ 아래 \ 코드에서\ numeric_col은 \ 수치형 데이터를\ 처리하고,\ category_col은\ 범주형\ 데이터를\ 처리합니다 }}$</p>
+
+```python
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+# Numeric features pipeline
+numeric_pipeline = Pipeline(
+    steps=[
+        ('imputer', SimpleImputer(strategy='mean')),
+        ('scaler', StandardScaler())
+    ])
+
+# Categorical features pipeline
+category_pipeline = Pipeline(
+    steps=[
+        ('imputer', SimpleImputer(strategy='most_frequent')),
+        ('encoder', OneHotEncoder(handle_unknown='ignore'))
+    ])
+
+# Full pipeline
+full_pipeline = ColumnTransformer(
+    transformers=[
+        ('numeric', numeric_pipeline, numeric_col),
+        ('category', category_pipeline, category_col)
+    ])
+
+# Fit and transform the data
+X_transformed = full_pipeline.fit_transform(X)
+```
+![cali housing 파이프라인 처리](https://github.com/leejoohyunn/images/blob/main/cali_housing%20%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8%20%EC%B2%98%EB%A6%AC)
+```python
+[[ 2.34476576  0.98214266  0.62855945 ... -0.04959654  1.05254828
+  -1.32783522]
+ [ 2.33223796 -0.60701891  0.32704136 ... -0.09251223  1.04318455
+  -1.32284391]
+ [ 1.7826994   1.85618152  1.15562047 ... -0.02584253  1.03850269
+  -1.33282653]
+ ...
+ [-1.14259331 -0.92485123 -0.09031802 ... -0.0717345   1.77823747
+  -0.8237132 ]
+ [-1.05458292 -0.84539315 -0.04021111 ... -0.09122515  1.77823747
+  -0.87362627]
+ [-0.78012947 -1.00430931 -0.07044252 ... -0.04368215  1.75014627
+  -0.83369581]]
+```
+---
+
 ### 2.3 수치형 + 범주형 파이프라인 결합한 파이프라인
 ```python
 from sklearn.compose import ColumnTransformer
@@ -1140,7 +1882,18 @@ pipe.fit(X,y)
 print('Estimate : ', pipe.predict(X))
 print('Accuracy : ', pipe.score(X, y))
 ```
-# ㅋ
+![diamond 수치, 범주형 결합 파이프라인](https://github.com/leejoohyunn/images/blob/main/diamond%20%EC%88%98%EC%B9%98%ED%98%95,%20%EB%B2%94%EC%A3%BC%ED%98%95%20%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8)
+```python
+Estimate :  [-1346.36428769  -664.59541111   211.10710617 ...  3030.54606309
+  2592.82921168  2733.70432005]
+Accuracy :  0.9197914950935594
+```
+---
+<p>$\bf{\rm{\color{#5ad7b7}Example}}$</p>
+
+위 example에 수치형과 범주형이 결합되도록 설계했습니다. 참고해주세요!
+---
+
 ### 2.4 ColumnTransformer
 ```python
 from sklearn.compose import ColumnTransformer
@@ -1164,6 +1917,16 @@ col_transformer = ColumnTransformer([
 display(col_transformer) # 파이프라인 그래프로 구성 확인
 print(data_df)
 print(col_transformer.fit_transform(data_df))
+```
+
+```python
+   height  weight   age
+0   165.0    70.0   NaN
+1     NaN    62.0  18.0
+2   182.0     NaN  15.0
+[[165.   70.    nan]
+ [173.5  62.   18. ]
+ [182.    nan  15. ]]
 ```
 ```python
 # SimpleImputer를 사용해서 mean과 median 값을 null에 넣고 
